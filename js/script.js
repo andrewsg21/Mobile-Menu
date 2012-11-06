@@ -12,6 +12,9 @@ app.menu = (function(doc, $, undefined) {
     dx = 0,		// distance moved
     ox = null,	// original X
 
+    breakpoint = 768,
+    menuWidth = 250,
+
 	container = null,
 	openButton = null,
 	isOpen = false,
@@ -29,6 +32,12 @@ app.menu = (function(doc, $, undefined) {
 		setSizes();
 		bindings();
 
+		// recalculate on resize
+		$(window).resize(function(){
+			getSizes();
+			setSizes();
+		});
+
 	},
 
 	getSizes = function(){
@@ -37,7 +46,12 @@ app.menu = (function(doc, $, undefined) {
 	},
 
 	setSizes = function(){
-		container.find('section').css({ height : data.docHeight - 44 })
+		container.find('section').css({ 
+			height : data.docHeight - 44
+		});
+		container.css({
+			width : (data.docWidth > breakpoint ? data.docWidth - menuWidth : data.docWidth)
+		});
 	},
 
 	bindings = function(){
