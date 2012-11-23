@@ -14,10 +14,14 @@ app.menu = (function(doc, $, undefined) {
 
     breakpoint = 768,
     menuWidth = 250,
+    headerHeight = 44,
+    offset = 0,
 
+    nav = null,
 	container = null,
 	openButton = null,
 	isOpen = false,
+	ios = false,
 
 	data = {
 		docHeight : null,
@@ -27,6 +31,7 @@ app.menu = (function(doc, $, undefined) {
 	init = function(){
 		openButton = $('.open');
 		container = $(openButton.data('target'));
+		nav = $('nav');
 
 		getSizes();
 		setSizes();
@@ -43,15 +48,27 @@ app.menu = (function(doc, $, undefined) {
 	getSizes = function(){
 		data.docHeight = $(window).height();
 		data.docWidth = $(window).width();
+		if (navigator.userAgent.match(/(iPhone|iPod|iPad)/i)) {
+			ios = true;
+			offset = 60;
+		}
 	},
 
 	setSizes = function(){
-		container.find('section').css({ 
-			height : data.docHeight - 44
+		container.find('#scroller').css({ 
+			height : data.docHeight - headerHeight + offset
+		});
+		nav.css({ 
+			height : data.docHeight + offset
 		});
 		container.css({
 			width : (data.docWidth > breakpoint ? data.docWidth - menuWidth : data.docWidth)
 		});
+		hideAddressBar();
+	},
+
+	hideAddressBar = function() {
+		setTimeout( function(){ window.scrollTo(0, 1); }, 50 );
 	},
 
 	bindings = function(){
@@ -59,11 +76,7 @@ app.menu = (function(doc, $, undefined) {
 		openButton.on('tap', function(e){
 			if (!isOpen) {
 				openContainer();
-			} else {
-				closeContainer();
 			}
-			e.preventDefault();
-			e.stopPropagation();
 		});
 
 		// touch start when container is open
@@ -87,10 +100,10 @@ app.menu = (function(doc, $, undefined) {
 			    // touch end
 				container.on('touchend', function(e) {
 					ox = null;
-					if(dx!=0){
-						dx = 0;
-						closeContainer();
-					}
+					//if(dx!=0){ // this cancels touches that arent moving, useful for blocking events
+					dx = 0;
+					closeContainer();
+					//}
 					container.off('touchend');
 					container.off('touchmove');
 				});
@@ -101,13 +114,15 @@ app.menu = (function(doc, $, undefined) {
 	},
 
 	openContainer = function(){
-		isOpen = true
-		animateContainer(250)
+		animateContainer(menuWidth, function(){
+			isOpen = true
+		})
 	},
 
 	closeContainer = function(){
-		isOpen = false
-		animateContainer(0)
+		animateContainer(0, function(){
+			isOpen = false
+		})
 	},
 
 	moveContainer = function(x){
@@ -120,13 +135,14 @@ app.menu = (function(doc, $, undefined) {
 		container.anim({ translate3d: to + 'px, 0, 0'}, 0.3, 'ease-out')
 		setTimeout(function(){
 			x = container.offset().left
-			//updateLog(x)
+			if (callback) callback()
 		}, 400)
 	}
 
 	return {
 		init : init,
-		open : open
+		open : openContainer,
+		close : closeContainer
 	};
 	
 })(document, Zepto);
